@@ -87,9 +87,9 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 	
-	// -------------
-	// SET UP FLAGS
-	// -------------
+	// -----------------------------
+	// PARSE COMMAND LINE ARGUMENTS
+	// -----------------------------
 	std::vector<std::string> args(argv + 1, argv + argc);
 	
 	// Show how the user's arguments were interpreted.
@@ -168,21 +168,25 @@ int main(int argc, char** argv)
 	}
 	
 	// Now use the set to create a string of valid letters
-	std::string letterGroup = "";
-	for (const char c : excludedLetterSet)
-	{
-		letterGroup += c;
-	}
-	
-	if (letterGroup.length() >= 26)
+	if (excludedLetterSet.size() >= 26)
 	{
 		std::cerr << "Error: All letters of the alphabet have been excluded.";
 		return EXIT_FAILURE;
 	}
-	if (letterGroup.length() > 0)
-		letterGroup = "[^" + letterGroup + "]";
+	std::string letterGroup = "[";
+	if (excludedLetterSet.size() > 0)
+	{
+		letterGroup += "^";
+		for (const char c : excludedLetterSet)
+		{
+			letterGroup += c;
+		}
+	}
 	else
-		letterGroup = "[a-z]";
+	{
+		letterGroup += "a-z";
+	}
+	letterGroup += "]";
 	
 	if (verbose)
 	{
