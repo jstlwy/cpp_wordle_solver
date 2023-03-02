@@ -170,7 +170,7 @@ int main(int argc, char** argv)
 	// Now use the set to create a string of valid letters
 	if (excludedLetterSet.size() >= 26)
 	{
-		std::cerr << "Error: All letters of the alphabet have been excluded.";
+		std::cerr << "Error: All letters of the alphabet have been excluded.\n";
 		return EXIT_FAILURE;
 	}
 	std::string letterGroup = "[";
