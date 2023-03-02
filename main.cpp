@@ -40,7 +40,7 @@ std::vector<std::string> filterWordsWithoutIncludedLetters(
 	const int wordLength,
 	const std::string& includeArg)
 {
-	if (wordList.empty() || wordLength < 2 || includeArg.length() == 0)
+	if (wordList.empty() || wordLength < 2 || includeArg.empty())
 		return wordList;
 	
 	std::set<char> includedLetters;
@@ -54,7 +54,7 @@ std::vector<std::string> filterWordsWithoutIncludedLetters(
 			includedLetters.insert(c);
 	}
 
-	if (includedLetters.size() == 0 || includedLetters.size() > wordLength)
+	if (includedLetters.empty() || includedLetters.size() > wordLength)
 		return wordList;
 
 	std::vector<std::string> filteredWords;
@@ -102,18 +102,18 @@ int main(int argc, char** argv)
 	// The length of the word to be found.
 	int tempWordLength = 5;
 	const std::string wordLengthParam = get_arg_param(args, "-length");
-	if (wordLengthParam != "")
+	if (!wordLengthParam.empty())
 	{
 		try
 		{
 			const int wordLengthParamValue = std::stoi(wordLengthParam);
 			tempWordLength = wordLengthParamValue;
 		}
-		catch(std::invalid_argument const& ex)
+		catch (const std::invalid_argument& ex)
 		{
 			std::cerr << "Invalid parameter to -length argument: " << ex.what() << "\n";
 		}
-		catch(std::out_of_range const& ex)
+		catch (const std::out_of_range& ex)
 		{
 			std::cerr << "Parameter to -length argument was out of range: " << ex.what() << "\n";
 		}
@@ -143,7 +143,7 @@ int main(int argc, char** argv)
 		std::cerr << "Error: Word length must be at least 2.\n";
 		return EXIT_FAILURE;
 	}
-	if (excludeArg.length() == 0 && includeArg.length() == 0 && knownArg.length() == 0)
+	if (excludeArg.empty() && includeArg.empty() && knownArg.empty())
 	{
 		std::cerr << "Error: No valid parameters were found for any of the options.\n";
 		return EXIT_FAILURE;
@@ -174,7 +174,7 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 	std::string letterGroup = "[";
-	if (excludedLetterSet.size() > 0)
+	if (!excludedLetterSet.empty())
 	{
 		letterGroup += "^";
 		for (const char c : excludedLetterSet)
