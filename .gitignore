@@ -1,0 +1,12 @@
+# macOS-specific
+.DS_Store
+
+# Object files
+*.o
+
+# Executable
+wordle_solver
+
+# All text files except default word list
+*.txt
+!wordlewords.txt
