@@ -198,12 +198,8 @@ int main(int argc, char** argv)
 	// GET KNOWN POSITIONS
 	// --------------------
 	std::vector<std::string> knownArgs = split(knownArg, ',');
-	std::vector<char> knownPositions(wordLength);
-	int numKnownPositions = 0;
-	for (std::size_t i = 0; i < wordLength; i++)
-	{
-		knownPositions[i] = '*';
-	}
+	std::vector<char> knownPositions(wordLength, '*');
+	std::size_t numKnownPositions = 0;
 	for (const std::string& arg : knownArgs)
 	{
 		if (std::regex_match(arg, posMatches, posRegex))
@@ -212,7 +208,7 @@ int main(int argc, char** argv)
 			if (position < 1 || position > wordLength)
 				continue;
 			const std::string charStr = posMatches[2];
-			knownPositions[position - 1] = charStr.at(0);
+			knownPositions.at(position - 1) = charStr.at(0);
 			numKnownPositions++;
 		}
 	}
@@ -272,6 +268,12 @@ int main(int argc, char** argv)
 	// -------------
 	// SHOW RESULTS
 	// -------------
+	if (wordList.empty())
+	{
+		std::cout << "No solutions found.\n";
+		return 0;
+	}
+
 	std::cout << wordList.size() << " possible solutions:\n";
 	for (const std::string& word : wordList)
 	{
