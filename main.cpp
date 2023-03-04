@@ -176,17 +176,41 @@ int main(int argc, char** argv)
 	std::string letterGroup = "[";
 	if (!excludedLetterSet.empty())
 	{
-		letterGroup += "^";
+		letterGroup += '^';
+		char prev_letter = *(excludedLetterSet.begin());
+		const char last_letter = *(excludedLetterSet.rbegin());
+		std::size_t consec_letter_count = 0;
 		for (const char c : excludedLetterSet)
 		{
-			letterGroup += c;
+			if (c == last_letter)
+			{
+				if (consec_letter_count > 0)
+					letterGroup += '-';
+				letterGroup += c;
+			}
+			else if (c - prev_letter == 1)
+			{
+				consec_letter_count++;
+			}
+			else
+			{
+				if (consec_letter_count > 0)
+				{
+					if (consec_letter_count > 1)
+						letterGroup += '-';
+					letterGroup += prev_letter;
+				}
+				letterGroup += c;
+				consec_letter_count = 0;
+			}
+			prev_letter = c;
 		}
 	}
 	else
 	{
 		letterGroup += "a-z";
 	}
-	letterGroup += "]";
+	letterGroup += ']';
 	
 	if (verbose)
 	{
@@ -217,14 +241,15 @@ int main(int argc, char** argv)
 	// BUILD REGEX PATTERN
 	// --------------------
 	std::string regexString = "";
-	std::size_t idx_last_unknown = 0;
-	std::size_t consec_unknown_count = 0;
 	if (numKnownPositions == 0)
 	{
 		regexString = letterGroup + "{" + std::to_string(wordLength) + "}";
 	}
 	else
 	{
+		std::size_t idx_last_unknown = 0;
+		std::size_t consec_unknown_count = 0;
+		const std::size_t end = knownPositions.size() - 1;
 		for (std::size_t i = 0; i < knownPositions.size(); i++)
 		{
 			const char c = knownPositions.at(i);
@@ -241,7 +266,7 @@ int main(int argc, char** argv)
 			else
 			{
 				consec_unknown_count++;
-				if ((i == knownPositions.size() - 1) && (idx_last_unknown == prev_i))
+				if ((i == end) && (idx_last_unknown == prev_i))
 					regexString += "{" + std::to_string(consec_unknown_count) + "}";
 				else if (consec_unknown_count == 1)
 					regexString += letterGroup;
