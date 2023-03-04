@@ -217,18 +217,36 @@ int main(int argc, char** argv)
 	// BUILD REGEX PATTERN
 	// --------------------
 	std::string regexString = "";
+	std::size_t idx_last_unknown = 0;
+	std::size_t consec_unknown_count = 0;
 	if (numKnownPositions == 0)
 	{
 		regexString = letterGroup + "{" + std::to_string(wordLength) + "}";
 	}
 	else
 	{
-		for (const char c : knownPositions)
+		for (std::size_t i = 0; i < knownPositions.size(); i++)
 		{
+			const char c = knownPositions.at(i);
+			const std::size_t prev_i = i - 1;
 			if (c != '*')
+			{
+				if ((idx_last_unknown == prev_i) && (consec_unknown_count > 1))
+				{
+					regexString += "{" + std::to_string(consec_unknown_count) + "}";
+					consec_unknown_count = 0;
+				}
 				regexString += c;
+			}
 			else
-				regexString += letterGroup;
+			{
+				consec_unknown_count++;
+				if ((i == knownPositions.size() - 1) && (idx_last_unknown == prev_i))
+					regexString += "{" + std::to_string(consec_unknown_count) + "}";
+				else if (consec_unknown_count == 1)
+					regexString += letterGroup;
+				idx_last_unknown = i;
+			}
 		}
 	}
 	regexString = "^" + regexString + "$";
