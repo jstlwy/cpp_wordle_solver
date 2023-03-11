@@ -9,6 +9,8 @@
 #include <string_view>
 #include <vector>
 
+constexpr std::size_t MIN_WORD_LENGTH = 4;
+
 std::string get_arg_param(const std::vector<std::string>& args, std::string_view expected_arg)
 {
 	auto itr = std::find(args.begin(), args.end(), expected_arg);
@@ -40,7 +42,7 @@ std::vector<std::string> filterWordsWithoutIncludedLetters(
 	const int wordLength,
 	const std::string& includeArg)
 {
-	if (wordList.empty() || wordLength < 2 || includeArg.empty())
+	if (wordList.empty() || wordLength < MIN_WORD_LENGTH || includeArg.empty())
 		return wordList;
 	
 	std::set<char> includedLetters;
@@ -97,7 +99,7 @@ int main(int argc, char** argv)
 	
 	// Path to text file containing a list of words.
 	const std::string wordFilePathParam = get_arg_param(args, "-list");
-	const std::string wordFilePath = wordFilePathParam != "" ? wordFilePathParam: "wordlewords.txt";
+	const std::string wordFilePath = wordFilePathParam != "" ? wordFilePathParam : "wordlewords.txt";
 	
 	// The length of the word to be found.
 	int tempWordLength = 5;
@@ -138,9 +140,14 @@ int main(int argc, char** argv)
 	// ------------------------
 	// VALIDATE USER ARGUMENTS
 	// ------------------------
-	if (wordLength < 2)
+	if (wordLength < MIN_WORD_LENGTH)
 	{
-		std::cerr << "Error: Word length must be at least 2.\n";
+		std::cerr << "Error: Word length must be at least " << MIN_WORD_LENGTH << ".\n";
+		return EXIT_FAILURE;
+	}
+	if (wordLength != 5 && wordFilePathParam != "")
+	{
+		std::cerr << "Error: Must provide an alternate word list if using a word length other than 5.\n";	
 		return EXIT_FAILURE;
 	}
 	if (excludeArg.empty() && includeArg.empty() && knownArg.empty())
@@ -155,7 +162,7 @@ int main(int argc, char** argv)
 	// ------------------
 	// GET VALID LETTERS
 	// ------------------
-	// Use set to prevent duplicate letters from appearing
+	// Use a set to prevent any letters from appearing more than once
 	std::set<char> excludedLetterSet;
 	std::vector<std::string> excludeArgs = split(excludeArg, ',');
 	for (const std::string& arg : excludeArgs)
@@ -167,14 +174,19 @@ int main(int argc, char** argv)
 			excludedLetterSet.insert(c);
 	}
 	
-	// Now use the set to create a string of valid letters
 	if (excludedLetterSet.size() >= 26)
 	{
 		std::cerr << "Error: All letters of the alphabet have been excluded.\n";
 		return EXIT_FAILURE;
 	}
+	
+	// Now use the set to create a string of valid letters
 	std::string letterGroup = "[";
-	if (!excludedLetterSet.empty())
+	if (excludedLetterSet.empty())
+	{
+		letterGroup += "a-z";
+	}
+	else
 	{
 		letterGroup += '^';
 		char prev_letter = *(excludedLetterSet.begin());
@@ -182,15 +194,15 @@ int main(int argc, char** argv)
 		std::size_t consec_letter_count = 0;
 		for (const char c : excludedLetterSet)
 		{
-			if (c == last_letter)
-			{
-				if (consec_letter_count > 0)
-					letterGroup += '-';
-				letterGroup += c;
-			}
-			else if (c - prev_letter == 1)
+			if (c - prev_letter == 1)
 			{
 				consec_letter_count++;
+				if (c == last_letter)
+				{
+					if (consec_letter_count > 1)
+						letterGroup += '-';
+					letterGroup += c;
+				}
 			}
 			else
 			{
@@ -205,10 +217,6 @@ int main(int argc, char** argv)
 			}
 			prev_letter = c;
 		}
-	}
-	else
-	{
-		letterGroup += "a-z";
 	}
 	letterGroup += ']';
 	
@@ -254,23 +262,21 @@ int main(int argc, char** argv)
 		{
 			const char c = knownPositions.at(i);
 			const std::size_t prev_i = i - 1;
-			if (c != '*')
+			if (c == '*')
 			{
-				if ((idx_last_unknown == prev_i) && (consec_unknown_count > 1))
-				{
+				idx_last_unknown = i;
+				consec_unknown_count++;
+				if (consec_unknown_count <= 1)
+					regexString += letterGroup;
+				else if (i == end)
 					regexString += "{" + std::to_string(consec_unknown_count) + "}";
-					consec_unknown_count = 0;
-				}
-				regexString += c;
 			}
 			else
 			{
-				consec_unknown_count++;
-				if ((i == end) && (idx_last_unknown == prev_i))
+				if ((idx_last_unknown == prev_i) && (consec_unknown_count > 1))
 					regexString += "{" + std::to_string(consec_unknown_count) + "}";
-				else if (consec_unknown_count == 1)
-					regexString += letterGroup;
-				idx_last_unknown = i;
+				regexString += c;
+				consec_unknown_count = 0;
 			}
 		}
 	}
